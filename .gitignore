@@ -1,3 +1,6 @@
 # folders
 .venv/
 __pycache__/
+
+# files
+/test.py
