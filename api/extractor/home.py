@@ -1,6 +1,6 @@
-from bs4 import BeautifulSoup, Tag
-from ..utils import get
 from .. import FRONT_PAGE
+from ..utils import get
+from bs4 import BeautifulSoup, Tag
 from dataclasses import dataclass
 
 
@@ -15,7 +15,7 @@ class Recommendation:
 async def get_recommendations():
     response = await get(FRONT_PAGE)
     soup = BeautifulSoup(response.text, 'lxml')
-    recommendation_containers = soup.findAll('a', rel='nofollow')
+    recommendation_containers = soup.find_all('a', rel='nofollow')
     recommendations = list(
         map(parse_recommendation, recommendation_containers))
     return recommendations

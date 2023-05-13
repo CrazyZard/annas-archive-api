@@ -1,3 +1,4 @@
+from .generic import FileInfo, extract_file_info
 from .. import FRONT_PAGE
 from ..utils import get
 from bs4 import BeautifulSoup, Tag
@@ -38,14 +39,6 @@ class FileType(Enum):
 
 
 @dataclass
-class FileInfo:
-    name: str | None
-    language: str | None
-    extension: str
-    size: str
-
-
-@dataclass
 class Result:
     title: str
     authors: list[str]
@@ -56,9 +49,9 @@ class Result:
     file_info: FileInfo
 
 
-async def getSearchResults(query: str, language: str = "",
-                           file_type: FileType = FileType.ANY,
-                           order_by: OrderBy = OrderBy.MOST_RELEVANT) -> list[Result]:
+async def get_search_results(query: str, language: str = "",
+                             file_type: FileType = FileType.ANY,
+                             order_by: OrderBy = OrderBy.MOST_RELEVANT) -> list[Result]:
     response = await get(
         url=f"{FRONT_PAGE}/search",
         params={
@@ -68,21 +61,23 @@ async def getSearchResults(query: str, language: str = "",
             'sort': order_by.value
         }
     )
-    html = BeautifulSoup(response.text, 'lxml')
-    raw_results = html.findAll('div', class_='h-[125]')
-    results = list(map(parseResult, raw_results))
+    soup = BeautifulSoup(response.text, 'lxml')
+    raw_results = soup.find_all('div', class_='h-[125]')
+    results = list(map(parse_result, raw_results))
     return [i for i in results if i != None]
 
 
-def parseResult(raw_content: Tag) -> Result | None:
+def parse_result(raw_content: Tag) -> Result | None:
     try:
-        title = raw_content.find('h3').getText(strip=True)
+        title = raw_content.find('h3').get_text(strip=True)
     except:
+        if '<!--' in str(raw_content):
+            return parse_result(uncomment_tag(raw_content))
         return None
     authors = raw_content.find(
         'div',
         class_='truncate italic'
-    ).getText(strip=True).split(', ')
+    ).get_text(strip=True).split(', ')
     publish_info = raw_content.find(
         'div', class_='truncate text-sm'
     ).text.split(', ')
@@ -90,7 +85,7 @@ def parseResult(raw_content: Tag) -> Result | None:
     publish_date = ', '.join(publish_info[1:])
     thumbnail_url = raw_content.find('img').get('src')
     url = raw_content.find('a').get('href')
-    file_info = extractFileInfo(
+    file_info = extract_file_info(
         raw_content.find('div', class_='truncate text-xs text-gray-500').text
     )
     return Result(
@@ -99,18 +94,6 @@ def parseResult(raw_content: Tag) -> Result | None:
     )
 
 
-def extractFileInfo(raw: str) -> FileInfo:
-    # sample data:
-    #  English [en], pdf, 7.5MB, "Python_Web_Scraping_-_Second_Edition.pdf"
-    #  English [en], pdf, 1.5MB
-    #  mobi, 4.1MB
-    info_list = raw.split(', ')
-    language = None
-    if '[' in info_list[0]:
-        language = info_list.pop(0)
-    extension = info_list.pop(0)
-    size = info_list.pop(0)
-    name = None
-    if len(info_list) > 0:
-        name = ", ".join(info_list).replace('"', '')
-    return FileInfo(name, language, extension, size)
+def uncomment_tag(tag: Tag) -> Tag:
+    raw_tag = str(tag).replace('<!--', '').replace('-->', '')
+    return BeautifulSoup(raw_tag, 'lxml')
