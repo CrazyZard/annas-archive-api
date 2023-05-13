@@ -1,4 +1,4 @@
-from bs4 import BeautifulSoup, NavigableString
+from bs4 import BeautifulSoup, Tag
 from ..utils import get
 from .. import FRONT_PAGE
 from dataclasses import dataclass
@@ -12,17 +12,19 @@ class Recommendation:
     url: str
 
 
-async def getRecommendations():
+async def get_recommendations():
     response = await get(FRONT_PAGE)
-    html = BeautifulSoup(response.text, 'lxml')
-    raw_recommendations = html.findAll('a', rel='nofollow')
-    recommendations = list(map(parseRecommendation, raw_recommendations))
+    soup = BeautifulSoup(response.text, 'lxml')
+    recommendation_containers = soup.findAll('a', rel='nofollow')
+    recommendations = list(
+        map(parse_recommendation, recommendation_containers))
     return recommendations
 
 
-def parseRecommendation(raw_content: NavigableString) -> Recommendation:
-    title = raw_content.find('h3').getText(strip=True)
-    authors = raw_content.find('div', class_='text-lg italic').text.split(', ')
+def parse_recommendation(raw_content: Tag) -> Recommendation:
+    title = raw_content.find('h3').get_text(strip=True)
+    author_list = raw_content.find(
+        'div', class_='text-lg italic').text.split(', ')
     thumbnail_url = raw_content.find('img').get('src')
     url = raw_content.get('href')
-    return Recommendation(title, authors, thumbnail_url, url)
+    return Recommendation(title, author_list, thumbnail_url, url)
