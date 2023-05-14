@@ -2,14 +2,17 @@ from .extractor import home, search, download
 from sanic.request import Request
 from sanic.response import json
 from dataclasses import asdict
+from .utils import cache
 
 
+@cache
 async def home_handler(_):
     recommendations = await home.get_recommendations()
     recommendations_list = [asdict(r) for r in recommendations]
     return json(recommendations_list)
 
 
+@cache
 async def search_handler(request: Request):
     query = request.args.get('q')
     if not query:
@@ -27,6 +30,7 @@ async def search_handler(request: Request):
     return json(result_list)
 
 
+@cache
 async def download_handler(request: Request):
     path = request.args.get('path')
     if not path:
