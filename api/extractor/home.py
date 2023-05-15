@@ -22,9 +22,9 @@ async def get_recommendations():
 
 
 def parse_recommendation(raw_content: Tag) -> Recommendation:
-    title = raw_content.find('h3').get_text(strip=True)
-    author_list = raw_content.find(
-        'div', class_='text-lg italic').text.split(', ')
+    title = raw_content.find('h3').text
+    authors = raw_content.find('div', class_='text-lg italic').text
+    author_list = authors.split(', ')
     thumbnail_url = raw_content.find('img').get('src')
     url = raw_content.get('href')
     return Recommendation(title, author_list, thumbnail_url, url)

@@ -69,27 +69,31 @@ async def get_search_results(query: str, language: str = "",
 
 def parse_result(raw_content: Tag) -> Result | None:
     try:
-        title = raw_content.find('h3').get_text(strip=True)
+        title = raw_content.find('h3').text.strip()
     except:
         if '<!--' in str(raw_content):
             return parse_result(uncomment_tag(raw_content))
         return None
-    authors = raw_content.find(
-        'div',
-        class_='truncate italic'
-    ).get_text(strip=True).split(', ')
+    authors = raw_content.find('div', class_='truncate italic').text
+    author_list = authors.split(', ')
+
     publish_info = raw_content.find(
         'div', class_='truncate text-sm'
     ).text.split(', ')
     publisher = publish_info[0]
     publish_date = ', '.join(publish_info[1:])
+
     thumbnail_url = raw_content.find('img').get('src')
     url = raw_content.find('a').get('href')
-    file_info = extract_file_info(
-        raw_content.find('div', class_='truncate text-xs text-gray-500').text
-    )
+
+    raw_file_info = raw_content.find(
+        'div',
+        class_='truncate text-xs text-gray-500'
+    ).text
+    file_info = extract_file_info(raw_file_info)
+
     return Result(
-        title, authors, publisher, publish_date,
+        title, author_list, publisher, publish_date,
         thumbnail_url, url, file_info
     )
 

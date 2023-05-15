@@ -10,10 +10,17 @@ class FileInfo:
 
 
 def extract_file_info(raw: str) -> FileInfo:
+    # Extract file info following a logic that the raw informations
+    # will always be containing file type and size, and if the name
+    # exists it will always be the last informations contained by "",
+    # and if the language exists it will always be the first containing
+    # a "[" that has the language code into it.
+
     # sample data:
     #  English [en], pdf, 7.5MB, "Python_Web_Scraping_-_Second_Edition.pdf"
-    #  English [en], pdf, 1.5MB
+    #  Portuguese [pt], epub, 1.5MB
     #  mobi, 4.1MB
+
     info_list = raw.split(', ')
     language = None
     if '[' in info_list[0]:
