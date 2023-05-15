@@ -1,4 +1,4 @@
-from .generic import FileInfo, extract_file_info
+from .generic import FileInfo, extract_file_info, extract_publish_info
 from .. import FRONT_PAGE
 from ..utils import get
 from bs4 import BeautifulSoup, Tag
@@ -42,9 +42,9 @@ class FileType(Enum):
 class Result:
     title: str
     authors: list[str]
-    publisher: str
-    publish_date: str
-    thumbnail_url: str
+    publisher: str | None
+    publish_date: str | None
+    thumbnail_url: str | None
     url: str
     file_info: FileInfo
 
@@ -77,13 +77,11 @@ def parse_result(raw_content: Tag) -> Result | None:
     authors = raw_content.find('div', class_='truncate italic').text
     author_list = authors.split(', ')
 
-    publish_info = raw_content.find(
-        'div', class_='truncate text-sm'
-    ).text.split(', ')
-    publisher = publish_info[0]
-    publish_date = ', '.join(publish_info[1:])
+    publish_info = raw_content.find('div', class_='truncate text-sm').text
+    publisher, publish_date = extract_publish_info(publish_info)
 
     thumbnail_url = raw_content.find('img').get('src')
+    thumbnail_url = thumbnail_url if thumbnail_url else None
     url = raw_content.find('a').get('href')
 
     raw_file_info = raw_content.find(

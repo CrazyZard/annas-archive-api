@@ -31,3 +31,27 @@ def extract_file_info(raw: str) -> FileInfo:
     if len(info_list) > 0:
         name = ", ".join(info_list).replace('"', '')
     return FileInfo(name, language, extension, size)
+
+
+def extract_publish_info(raw: str) -> tuple[str | None, str | None]:
+    info = raw.split(', ')
+    publisher = None
+    date = None
+    if info[-1] == '0':
+        # In this case the system don't know the date
+        if len(info) > 1:
+            publisher = ', '.join(info[:-1])
+        pass
+    elif info[-1].isnumeric():
+        # The system know the year and can know the month of publish
+        date = info[-1]
+        publisher = ', '.join(info[:-1])
+        if len(info) >= 2 and info[-2].isnumeric():
+            # Here the system know both, year and month
+            date = ', '.join(info[-2:])
+            publisher = ', '.join(info[:-2])
+    else:
+        # The system don't know the date and can send the publisher
+        publisher = ', '.join(info)
+    publisher = publisher if publisher else None
+    return (publisher, date)

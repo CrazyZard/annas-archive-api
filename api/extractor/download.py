@@ -1,4 +1,4 @@
-from .generic import FileInfo, extract_file_info
+from .generic import FileInfo, extract_file_info, extract_publish_info
 from .. import FRONT_PAGE
 from ..utils import get
 from bs4 import BeautifulSoup, Tag
@@ -16,9 +16,9 @@ class Download:
     title: str
     authors: list[str]
     description: str
-    publisher: str
-    publish_date: str
-    thumbnail_url: str
+    publisher: str | None
+    publish_date: str | None
+    thumbnail_url: str | None
     file_info: FileInfo
     download_links: list[Link]
 
@@ -34,11 +34,10 @@ async def get_download(path: str) -> Download:
     authors = soup.find('div', class_='italic').text.split(', ')
     description = soup.find('div', class_='mt-4 line-clamp-[6]').text
     thumbnail_url = soup.find('img').get('src')
+    thumbnail_url = thumbnail_url if thumbnail_url else None
 
-    # Extract publisher info using a basic logic
-    publish_info = soup.find('div', class_='text-md').text.split(', ')
-    publisher = publish_info[0]
-    publish_date = ', '.join(publish_info[1:])
+    publish_info = soup.find('div', class_='text-md').text
+    publisher, publish_date = extract_publish_info(publish_info)
 
     # Extract file & download info processing data into dataclasses
     raw_file_info = soup.find('div', class_='text-sm text-gray-500').text
