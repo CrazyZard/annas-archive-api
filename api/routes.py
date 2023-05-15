@@ -7,7 +7,10 @@ from .utils import cache
 
 @cache
 async def home_handler(_):
-    recommendations = await home.get_recommendations()
+    try:
+        recommendations = await home.get_recommendations()
+    except Exception as err:
+        return json({'error': 'failed to load recommendations: ' + str(err)}, status=500)
     recommendations_list = [asdict(r) for r in recommendations]
     return json(recommendations_list)
 
@@ -20,12 +23,15 @@ async def search_handler(request: Request):
     language = request.args.get('lang', '')
     extension = request.args.get('ext', '')
     order_by = request.args.get('sort', '')
-    result = await search.get_search_results(
-        query=query,
-        language=language,
-        file_type=search.FileType(extension),
-        order_by=search.OrderBy(order_by)
-    )
+    try:
+        result = await search.get_search_results(
+            query=query,
+            language=language,
+            file_type=search.FileType(extension),
+            order_by=search.OrderBy(order_by)
+        )
+    except Exception as err:
+        return json({'error': 'failed to load search results: ' + str(err)}, status=500)
     result_list = [asdict(r) for r in result]
     return json(result_list)
 
@@ -35,5 +41,8 @@ async def download_handler(request: Request):
     path = request.args.get('path')
     if not path:
         return json({'error': 'missing path'}, status=400)
-    download_data = await download.get_download(path)
+    try:
+        download_data = await download.get_download(path)
+    except Exception as err:
+        return json({'error': 'failed to load download data: ' + str(err)}, status=500)
     return json(asdict(download_data))
