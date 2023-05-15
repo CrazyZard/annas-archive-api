@@ -34,7 +34,7 @@ def cache(func):
             response = await func(request, *args, **kwargs)
             cache_storage[request.url] = Cache(response, time() + 3600)
             cache_data = cache_storage[request.url]
-        expires_in = cache_data.expires - time()
+        expires_in = int(cache_data.expires - time())
         cache_data.response.headers["Cache-Control"] = f"max-age={expires_in}"
         return cache_data.response
     return wrapper
