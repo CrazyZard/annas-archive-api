@@ -3,6 +3,8 @@ from sanic.request import Request
 from sanic.response import json
 from dataclasses import asdict
 from .utils import cache
+import traceback
+import sys
 
 
 @cache
@@ -44,5 +46,6 @@ async def download_handler(request: Request):
     try:
         download_data = await download.get_download(path)
     except Exception as err:
+        traceback.print_exc(file=sys.stdout)
         return json({'error': 'failed to load download data: ' + str(err)}, status=500)
     return json(asdict(download_data))

@@ -1,6 +1,6 @@
 from .generic import FileInfo, extract_file_info, extract_publish_info
 from .. import FRONT_PAGE
-from ..utils import get
+from ..utils import http_get
 from bs4 import BeautifulSoup, Tag
 from dataclasses import dataclass
 
@@ -14,7 +14,7 @@ class Link:
 @dataclass
 class Download:
     title: str
-    authors: list[str]
+    authors: str
     description: str
     publisher: str | None
     publish_date: str | None
@@ -26,13 +26,14 @@ class Download:
 async def get_download(path: str) -> Download:
     # Get webpage and turn it into a BeautifulSoup object
     path = path[1:] if path[0] == '/' else path
-    response = await get(f"{FRONT_PAGE}/{path}")
+    response = await http_get(f"{FRONT_PAGE}/{path}")
     soup = BeautifulSoup(response.text, 'lxml')
 
     # Extract basic data
     title = soup.find('div', class_='text-3xl font-bold').text
-    authors = soup.find('div', class_='italic').text.split(', ')
-    description = soup.find('div', class_='mt-4 line-clamp-[6]').text
+    authors = soup.find('div', class_='italic').text
+    description = soup.find(
+        'div', class_='js-md5-top-box-description').text
     thumbnail_url = soup.find('img').get('src')
     thumbnail_url = thumbnail_url if thumbnail_url else None
 

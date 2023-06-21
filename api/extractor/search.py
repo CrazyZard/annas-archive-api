@@ -1,6 +1,6 @@
 from .generic import FileInfo, extract_file_info, extract_publish_info
 from .. import FRONT_PAGE
-from ..utils import get
+from ..utils import http_get
 from bs4 import BeautifulSoup, Tag
 from dataclasses import dataclass
 from enum import Enum
@@ -41,10 +41,10 @@ class FileType(Enum):
 @dataclass
 class Result:
     title: str
-    authors: list[str]
+    authors: str
     publisher: str | None
     publish_date: str | None
-    thumbnail_url: str | None
+    thumbnail: str | None
     url: str
     file_info: FileInfo
 
@@ -52,7 +52,7 @@ class Result:
 async def get_search_results(query: str, language: str = "",
                              file_type: FileType = FileType.ANY,
                              order_by: OrderBy = OrderBy.MOST_RELEVANT) -> list[Result]:
-    response = await get(
+    response = await http_get(
         url=f"{FRONT_PAGE}/search",
         params={
             'q': query,
@@ -61,7 +61,8 @@ async def get_search_results(query: str, language: str = "",
             'sort': order_by.value
         }
     )
-    soup = BeautifulSoup(response.text, 'lxml')
+    html = response.text.replace('<!--', '').replace('-->', '')
+    soup = BeautifulSoup(html, 'lxml')
     raw_results = soup.find_all('div', class_='h-[125]')
     results = list(map(parse_result, raw_results))
     return [i for i in results if i != None]
@@ -71,11 +72,8 @@ def parse_result(raw_content: Tag) -> Result | None:
     try:
         title = raw_content.find('h3').text.strip()
     except:
-        if '<!--' in str(raw_content):
-            return parse_result(uncomment_tag(raw_content))
         return None
     authors = raw_content.find('div', class_='truncate italic').text
-    author_list = authors.split(', ')
 
     publish_info = raw_content.find('div', class_='truncate text-sm').text
     publisher, publish_date = extract_publish_info(publish_info)
@@ -91,11 +89,6 @@ def parse_result(raw_content: Tag) -> Result | None:
     file_info = extract_file_info(raw_file_info)
 
     return Result(
-        title, author_list, publisher, publish_date,
+        title, authors, publisher, publish_date,
         thumbnail_url, url, file_info
     )
-
-
-def uncomment_tag(tag: Tag) -> Tag:
-    raw_tag = str(tag).replace('<!--', '').replace('-->', '')
-    return BeautifulSoup(raw_tag, 'lxml')
