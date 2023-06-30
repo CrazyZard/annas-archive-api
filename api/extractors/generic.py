@@ -35,31 +35,21 @@ def extract_publish_info(raw: str) -> tuple[str | None, str | None]:
     #  John Wiley and Sons; Wiley (Blackwell Publishing); Blackwell Publishing Inc.; Wiley; JSTOR (ISSN 0020-6598), International Economic Review, #2, 45, pages 327-350, 2004 may
     #  Cambridge University Press, 10.1017/CBO9780511510854, 2001
     #  Cambridge University Press, 1, 2008
+    #  Cambridge University Press, 2014 feb 16
     #  1, 2008
     #  2008
 
+    if raw.strip() == '':
+        return (None, None)
     info = raw.split(', ')
     last_info = info[-1].split()
-    publisher = None
     date = None
-
-    if info[-1] == '0':
-        # In this case the system don't know the date
-        if len(info) > 1:
-            publisher = ', '.join(info[:-1])
-    elif last_info != []:
-        if len(last_info) > 1 and last_info[0].isdecimal() and last_info[1].isalpha():
-            # Month is in text format
-            date = f'{last_info[1]} of {last_info[0]}'
-            info.pop()
-        # The system know the year and can know the month of publish
-        if info[-1].isdecimal() and date is None:
-            # System know both, year and month
-            date = info.pop()
-            if info[-1].isdecimal():
-                date = info.pop() + ', ' + date
-        publisher = ', '.join(info) or None
-    elif info:
-        # System don't know the date in any way
-        publisher = ', '.join(info)
+    if last_info[0].isdecimal() and last_info[0] != '0':
+        info.pop()
+        date = last_info.pop(0)
+        if last_info:
+            date = ' '.join(last_info) + ' of ' + date
+        elif info and info[-1].isdecimal():
+            date = info.pop() + ', ' + date
+    publisher = ', '.join(info) or None
     return (publisher, date)
