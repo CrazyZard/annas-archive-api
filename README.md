@@ -3,7 +3,7 @@
 An unofficial API for the [Anna's Archive](https://annas-archive.org)
 website made in python with coffee :)
 
-Few free to contribute here with code and relating problems or
+Feel free to contribute here with code and relating problems or
 just making a suggestion.
 
 
@@ -12,7 +12,7 @@ just making a suggestion.
 ### `/`: Get recommendations
   - Description: Get the recommendations from homepage of the website
   - Parameters: Don't need
-  - Returns: A list of [Recommendations](api/extractor/home.py#L8)
+  - Returns: A list of [Recommendations](api/extractors/home.py#L8)
 
 ### `/search`: Search for contents
   - Description: Search using filters and with a selectable sort
@@ -20,12 +20,12 @@ just making a suggestion.
     - q: Query to search(required)
     - lang: Language code
     - ext: File extension
-    - sort: Sort order to be used(see the valid values [here](api/extractor/search.py#L9))
-  - Returns: A list of [Result](api/extractor/search.py#L42)
+    - sort: Sort order to be used(see the valid values [here](api/extractors/search.py#L9))
+  - Returns: A list of [Result](api/extractors/search.py#L42)
 
 
-### `/download`: Get content informations
-  - Description: Get file informations like the basic informations, book description, and other file informations
+### `/download`: Get content information
+  - Description: Get file information like the basic information, book description, and other file information
   - Parameters:
     - `path`: The URL path to the content(required)
-  - Returns: [Download](api/extractor/download.py#L15)
+  - Returns: [Download](api/extractors/download.py#L15)

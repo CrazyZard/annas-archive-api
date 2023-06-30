@@ -18,29 +18,27 @@ class Download:
     description: str
     publisher: str | None
     publish_date: str | None
-    thumbnail_url: str | None
+    thumbnail: str | None
     file_info: FileInfo
     download_links: list[Link]
 
 
 async def get_download(path: str) -> Download:
-    # Get webpage and turn it into a BeautifulSoup object
-    path = path[1:] if path[0] == '/' else path
+    path = path if path[0] != '/' else path[1:]
     response = await http_get(f"{FRONT_PAGE}/{path}")
     soup = BeautifulSoup(response.text, 'lxml')
 
-    # Extract basic data
     title = soup.find('div', class_='text-3xl font-bold').text
     authors = soup.find('div', class_='italic').text
     description = soup.find(
-        'div', class_='js-md5-top-box-description').text
-    thumbnail_url = soup.find('img').get('src')
-    thumbnail_url = thumbnail_url if thumbnail_url else None
+        name='div',
+        class_='js-md5-top-box-description'
+    ).text
+    thumbnail = soup.find('img').get('src') or None
 
     publish_info = soup.find('div', class_='text-md').text
     publisher, publish_date = extract_publish_info(publish_info)
 
-    # Extract file & download info processing data into dataclasses
     raw_file_info = soup.find('div', class_='text-sm text-gray-500').text
     file_info = extract_file_info(raw_file_info)
     download_links = list(map(
@@ -50,7 +48,7 @@ async def get_download(path: str) -> Download:
 
     return Download(
         title, authors, description[1:-1], publisher,
-        publish_date, thumbnail_url, file_info, download_links
+        publish_date, thumbnail, file_info, download_links
     )
 
 

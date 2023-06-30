@@ -45,13 +45,15 @@ class Result:
     publisher: str | None
     publish_date: str | None
     thumbnail: str | None
-    url: str
+    path: str
     file_info: FileInfo
 
 
-async def get_search_results(query: str, language: str = "",
-                             file_type: FileType = FileType.ANY,
-                             order_by: OrderBy = OrderBy.MOST_RELEVANT) -> list[Result]:
+async def get_search_results(
+        query: str, language: str = "",
+        file_type: FileType = FileType.ANY,
+        order_by: OrderBy = OrderBy.MOST_RELEVANT
+) -> list[Result]:
     response = await http_get(
         url=f"{FRONT_PAGE}/search",
         params={
@@ -63,7 +65,7 @@ async def get_search_results(query: str, language: str = "",
     )
     html = response.text.replace('<!--', '').replace('-->', '')
     soup = BeautifulSoup(html, 'lxml')
-    raw_results = soup.find_all('div', class_='h-[125]')
+    raw_results = soup.find_all('a', class_='js-vim-focus')
     results = list(map(parse_result, raw_results))
     return [i for i in results if i != None]
 
@@ -78,9 +80,8 @@ def parse_result(raw_content: Tag) -> Result | None:
     publish_info = raw_content.find('div', class_='truncate text-sm').text
     publisher, publish_date = extract_publish_info(publish_info)
 
-    thumbnail_url = raw_content.find('img').get('src')
-    thumbnail_url = thumbnail_url if thumbnail_url else None
-    url = raw_content.find('a').get('href')
+    thumbnail = raw_content.find('img').get('src') or None
+    path = raw_content.get('href')
 
     raw_file_info = raw_content.find(
         'div',
@@ -90,5 +91,5 @@ def parse_result(raw_content: Tag) -> Result | None:
 
     return Result(
         title, authors, publisher, publish_date,
-        thumbnail_url, url, file_info
+        thumbnail, path, file_info
     )
