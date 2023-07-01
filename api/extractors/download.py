@@ -28,8 +28,10 @@ async def get_download(path: str) -> Download:
     response = await http_get(f"{FRONT_PAGE}/{path}")
     soup = BeautifulSoup(response.text, 'lxml')
 
-    title = soup.find('div', class_='text-3xl font-bold').text
-    authors = soup.find('div', class_='italic').text
+    clear = lambda s: s.replace('🔍', '').strip()
+
+    title = clear(soup.find('div', class_='text-3xl font-bold').text)
+    authors = clear(soup.find('div', class_='italic').text)
     description = soup.find(
         name='div',
         class_='js-md5-top-box-description'
