@@ -41,7 +41,7 @@ def extract_publish_info(raw: str) -> tuple[str | None, str | None]:
 
     if raw.strip() == '':
         return (None, None)
-    info = raw.split(', ')
+    info = [i for i in raw.split(', ') if i.strip()]
     last_info = info[-1].split()
     date = None
     if last_info[0].isdecimal() and last_info[0] != '0':
